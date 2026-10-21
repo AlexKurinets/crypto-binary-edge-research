@@ -1,0 +1,48 @@
+# db         Postgres 16: the recorded market, the research runs, the paper log
+# pipeline   one-shot: migrate, seed the synthetic market if empty, run the walk-forward research and
+#            the paper period if they have not run yet, then exit (about four minutes the first time)
+# dashboard  Streamlit, reads the same tables
+#
+# Host ports default to 5432 / 8501; override them in .env (see .env.example).
+
+x-app: &app
+  build: .
+  image: crypto-binary-edge-research:local
+  environment:
+    EDGELAB_DSN: postgresql://edgelab:edgelab@db:5432/edgelab
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: edgelab
+      POSTGRES_PASSWORD: edgelab
+      POSTGRES_DB: edgelab
+    ports:
+      - "${EDGELAB_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edgelab -d edgelab"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  pipeline:
+    <<: *app
+    command: ["sh", "-c", "edgelab migrate && edgelab seed --if-empty && edgelab research --if-none && edgelab paper --if-none"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dashboard:
+    <<: *app
+    command: ["streamlit", "run", "dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "${EDGELAB_DASHBOARD_PORT:-8501}:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully

@@ -1,0 +1,113 @@
+# The hypothesis registry. Each rule and its thresholds were written down before the research
+# run looked at outcomes, and the run tests them exactly as written; nothing here is tuned to
+# the data. Editing this file creates a new registration. The run records how many
+# registrations the same data has seen, because every edit is another look at it.
+registered: 2026-06-15
+
+hypotheses:
+  - id: H01
+    name: Fair value, any conditions
+    family: fair value
+    description: Buy whichever side the model prices at least 3 cents above its ask, after the fee.
+    kind: fair_value
+    min_edge: 0.03
+
+  - id: H02
+    name: Stale quotes after a fast move
+    family: microstructure
+    description: After a one-minute index move of at least 2 standard deviations, buy in the direction of the move when the model's edge is at least 3 cents after the fee. Not inside a scheduled release window, where makers are watching and spreads are wide.
+    kind: fast_move
+    min_abs_z: 2.0
+    min_edge: 0.03
+    no_trade:
+      - [Scheduled release, inside release window]
+
+  - id: H03
+    name: Back the favourite
+    family: price bias
+    description: Buy the side priced 90 to 97 cents, at least 10 minutes before the close.
+    kind: favourite
+    price_range: [0.90, 0.97]
+    min_tau_min: 10
+
+  - id: H04
+    name: Cheap tails when volatility expands
+    family: volatility
+    description: When 15-minute variance runs at twice the daily rate or more, buy the side priced 5 to 20 cents.
+    kind: tails
+    min_vol_ratio: 2.0
+    price_range: [0.05, 0.20]
+
+  - id: H05
+    name: 15-minute momentum
+    family: direction
+    description: After a 15-minute move of at least 1 standard deviation, buy the near-the-money contract in the direction of the move.
+    kind: directional
+    signal: ret_15m_z
+    threshold: 1.0
+    follow: true
+
+  - id: H06
+    name: 15-minute reversal
+    family: direction
+    description: After a 15-minute move of at least 1 standard deviation, buy the near-the-money contract against the move.
+    kind: directional
+    signal: ret_15m_z
+    threshold: 1.0
+    follow: false
+
+  - id: H07
+    name: Mean reversion in range-bound hours
+    family: regime
+    description: In a range-bound regime, fade a 15-minute move of at least 0.75 standard deviations with the near-the-money contract.
+    kind: directional
+    signal: ret_15m_z
+    threshold: 0.75
+    follow: false
+    regime: range
+
+  - id: H08
+    name: Trend continuation in trending hours
+    family: regime
+    description: In a trending regime, follow a 15-minute move of at least 0.75 standard deviations with the near-the-money contract.
+    kind: directional
+    signal: ret_15m_z
+    threshold: 0.75
+    follow: true
+    regime: trend
+
+  - id: H09
+    name: Breakout continuation
+    family: regime
+    description: When the index closes outside its prior four-hour range, buy the near-the-money contract in the direction of the break.
+    kind: directional
+    signal: breakout
+    threshold: 1
+    follow: true
+
+  - id: H10
+    name: Failed breakout
+    family: regime
+    description: When the index closes outside its prior four-hour range, buy the near-the-money contract back toward the range.
+    kind: directional
+    signal: breakout
+    threshold: 1
+    follow: false
+
+  - id: H11
+    name: ETH leads BTC
+    family: cross-asset
+    description: When ETH moves at least 2 standard deviations in a minute and BTC has moved less than 0.5, buy the near-the-money BTC contract in ETH's direction.
+    kind: cross_asset
+    leader: ETH
+    follower: BTC
+    leader_min_z: 2.0
+    follower_max_z: 0.5
+
+  - id: H12
+    name: Fair value on weekends
+    family: fair value
+    description: The fair-value rule, on Saturdays and Sundays only, when books are thinner.
+    kind: fair_value
+    min_edge: 0.03
+    weekend: true

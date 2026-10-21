@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: edgelab
+          POSTGRES_PASSWORD: edgelab
+          POSTGRES_DB: edgelab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U edgelab -d edgelab"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      EDGELAB_DSN: postgresql://edgelab:edgelab@localhost:5432/edgelab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Tests
+        run: pytest -q --durations=5
+      - name: The command-line path without Docker, on a small market
+        run: |
+          edgelab migrate
+          edgelab seed --research-days 36 --paper-days 3
+          edgelab research
+          edgelab paper
+          edgelab report | head -20
+          edgelab power --edge 0.02
+
+  compose:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bring the stack up (seed, research, paper, dashboard)
+        run: docker compose up --build -d --wait --wait-timeout 900
+      - name: Smoke every documented sequence
+        run: bash scripts/smoke.sh
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

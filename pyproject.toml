@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-binary-edge-research"
+version = "1.0.0"
+description = "Research and paper trading for short-dated crypto above/below contracts: settlement-aware probabilities, cost-honest walk-forward tests and a timestamped paper log."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Alex Kurinets" }]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.11",
+    "psycopg[binary]>=3.2",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dashboard = ["streamlit>=1.40", "altair>=5"]
+dev = ["pytest>=8", "ruff>=0.6", "streamlit>=1.40", "altair>=5"]
+
+[project.scripts]
+edgelab = "edgelab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 180
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["edgelab", "conftest", "common"]

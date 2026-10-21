@@ -1,0 +1,29 @@
+# Every choice the research run makes is fixed here, before it sees an outcome.
+
+walk_forward:
+  warmup_days: 1          # a full day of bars before the first feature row
+  train_days: 28          # HAR and recalibration are refitted on the four weeks before each test week
+  test_days: 7
+  embargo_minutes: 60     # training rows whose 60-minute target reaches into the test week are dropped
+  har_sample_every_min: 5
+
+model:
+  student_t_dof: 5
+  settlement_window_s: 60
+
+execution:
+  order_contracts: 25
+  latency_s: 2            # the order is matched against the quote two seconds after the decision
+  limit_slip_cents: 1     # immediate-or-cancel, at most one cent through the decision price
+  fee_coefficient: 0.07   # round_up(0.07 x C x P x (1 - P)) per order
+
+inference:
+  bootstrap_resamples: 2000
+  bootstrap_seed: 7
+  fdr_q: 0.10             # Benjamini-Hochberg across every registered hypothesis
+  min_clusters: 30        # fewer independent asset-hours than this is "too few to tell"
+
+conditions:               # half-open buckets [lo, hi)
+  spread_cents: [[1, 3, "1-2c"], [3, 5, "3-4c"], [5, 100, "5c+"]]
+  minutes_to_close: [[5, 15, "5-10 min"], [15, 30, "15-25 min"], [30, 60, "30-50 min"]]
+  contract_price: [[0.0, 0.30, "under 30c"], [0.30, 0.70, "30-70c"], [0.70, 1.01, "70c and over"]]
