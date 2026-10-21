@@ -9,7 +9,8 @@ echo "== dashboard is up"
 curl -fsS "http://localhost:${DASH_PORT}/_stcore/health" | grep -q ok
 
 echo "== the pipeline produced a research run and a paper period"
-docker compose run --rm -T pipeline edgelab status | tee /tmp/status.json | head -5
+docker compose run --rm -T pipeline edgelab status > /tmp/status.json  # not piped into head: an early close would fail the run under pipefail
+head -5 /tmp/status.json
 grep -q '"frozen_hypothesis": "H02"' /tmp/status.json
 grep -q '"paper"' /tmp/status.json
 [ "$(psql -c 'select count(*) from research.hypotheses where run_id = 1')" = "12" ]

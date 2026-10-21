@@ -56,7 +56,7 @@ These are the figures the Compose stack produces from the synthetic market.
 | Hypotheses registered | 12: one survives, two have gross edge that costs erase, eight have none, one trades too rarely to judge |
 | Survivor, H02 stale quotes after a fast move | +6.2 cents a contract net (95% CI +3.3 to +9.0), 879 trades, 781 asset-hours, q = 0.006 |
 | Where its gross 8.7 cents goes | 1.2 cents of half-spread, 0.0 of latency, 1.3 of fee |
-| Paper period, 6 weeks, frozen rule | 444 signals: 333 filled, 87 missed, 24 skipped by the registered filter; +4.3 cents a contract (95% CI +0.05 to +8.4), $354 on 8,319 contracts |
+| Paper period, 6 weeks, frozen rule | 444 signals: 333 filled, 87 missed, 24 skipped by the registered filter; +4.3 cents a contract (95% CI -0.1 to +8.3), $354 on 8,319 contracts; six weeks is too short to rule out zero on its own |
 | Signals the filter blocked | would have lost 7.3 cents a contract at their decision price |
 
 The synthetic market is a known-answer test. Its market maker is about as well calibrated as the model, but it plants three weaknesses (stale quotes during bursts, a volatility estimate that lags expansions, and a small favourite-longshot bias), and its index has no predictable direction. A sound pipeline should find the first, see the other two eaten by costs, and reject every trend, range and breakout rule. It does.

@@ -32,7 +32,7 @@ def cluster_bootstrap(values, weights, clusters, resamples: int = 2000, seed: in
     mean minus the estimate is at least as large as the estimate.
     """
     df = pd.DataFrame({"v": np.asarray(values, float) * np.asarray(weights, float), "w": np.asarray(weights, float), "c": clusters})
-    agg = df.groupby("c", sort=False)[["v", "w"]].sum()
+    agg = df.groupby("c", sort=True)[["v", "w"]].sum()  # sorted, so row order never changes the resamples
     s, w = agg["v"].to_numpy(), agg["w"].to_numpy()
     n = len(agg)
     if n == 0 or w.sum() == 0:
