@@ -8,7 +8,40 @@ This is a reference implementation of the architecture behind a platform I built
 
 ## Architecture
 
-```mermaid<br/>flowchart LR<br/>  subgraph Sources["Recorded market (adapters)"]<br/>    IDX["Index: 1-minute bars"]<br/>    BOOK["Quotes at each decision, and 2 s later"]<br/>    SET["Settlements: 60 s average"]<br/>    REL["Release calendar"]<br/>  end<br/>  REG[("config/hypotheses.yml\nregistered rules")]<br/>  subgraph Research["edgelab research"]<br/>    FEAT["Point-in-time features"]<br/>    MOD["HAR-RV + settlement-aware\nStudent-t + recalibration"]<br/>    WF["Purged walk-forward\nweekly refit, 60 min embargo"]<br/>    COST["Fill at quote + 2 s,\nIOC limit, size cap, taker fee"]<br/>    INF["Cluster bootstrap by asset-hour,\nBenjamini-Hochberg"]<br/>    FRZ["Freeze survivor, filters, model"]<br/>  end<br/>  subgraph PG["Postgres 16"]<br/>    MKT[("market")]<br/>    RES[("research")]<br/>    PAP[("paper: append-only\ndecisions")]<br/>  end<br/>  FEED["ReplayFeed: bars, snapshot,\nsend, settled"]<br/>  TRADER["edgelab paper"]<br/>  DASH["Streamlit dashboard"]<br/>  Sources --> MKT<br/>  MKT --> FEAT --> MOD --> WF --> COST --> INF --> FRZ<br/>  REG --> COST<br/>  FRZ --> RES<br/>  MKT --> FEED --> TRADER<br/>  RES --> TRADER --> PAP<br/>  RES --> DASH<br/>  PAP --> DASH<br/>```
+```mermaid
+flowchart LR
+  subgraph Sources["Recorded market (adapters)"]
+    IDX["Index: 1-minute bars"]
+    BOOK["Quotes at each decision, and 2 s later"]
+    SET["Settlements: 60 s average"]
+    REL["Release calendar"]
+  end
+  REG[("config/hypotheses.yml<br/>registered rules")]
+  subgraph Research["edgelab research"]
+    FEAT["Point-in-time features"]
+    MOD["HAR-RV + settlement-aware<br/>Student-t + recalibration"]
+    WF["Purged walk-forward<br/>weekly refit, 60 min embargo"]
+    COST["Fill at quote + 2 s,<br/>IOC limit, size cap, taker fee"]
+    INF["Cluster bootstrap by asset-hour,<br/>Benjamini-Hochberg"]
+    FRZ["Freeze survivor, filters, model"]
+  end
+  subgraph PG["Postgres 16"]
+    MKT[("market")]
+    RES[("research")]
+    PAP[("paper: append-only<br/>decisions")]
+  end
+  FEED["ReplayFeed: bars, snapshot,<br/>send, settled"]
+  TRADER["edgelab paper"]
+  DASH["Streamlit dashboard"]
+  Sources --> MKT
+  MKT --> FEAT --> MOD --> WF --> COST --> INF --> FRZ
+  REG --> COST
+  FRZ --> RES
+  MKT --> FEED --> TRADER
+  RES --> TRADER --> PAP
+  RES --> DASH
+  PAP --> DASH
+```
 
 The synthetic market runs from 4 May to 5 October 2026: two assets, five strikes around each hour's opening print, decisions 50, 45, ... 5 minutes before each close (369,600 quote snapshots), and two scheduled releases a week. The first 16 weeks are research history and the last 6 are the paper period.
 
